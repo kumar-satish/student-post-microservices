@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: topic-service
+
+  config:
+    import: configserver:http://localhost:8888
+    fail-fast: true
