@@ -1,0 +1,33 @@
+server:
+  port: 8085
+
+spring:
+#  config:
+#    import: configserver:http://localhost:9999
+#    fail-fast: false
+  application:
+    name: iam-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/iam_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: Admin@123
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.security.oauth2.server.authorization: INFO

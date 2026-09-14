@@ -3,5 +3,5 @@ spring:
     name: topic-service
 
   config:
-    import: configserver:http://localhost:8888
+    import: configserver:http://localhost:9999
     fail-fast: true
