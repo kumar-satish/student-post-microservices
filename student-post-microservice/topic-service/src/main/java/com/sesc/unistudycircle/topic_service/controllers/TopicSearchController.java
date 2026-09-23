@@ -3,6 +3,7 @@ package com.sesc.unistudycircle.topic_service.controllers;
 import com.sesc.unistudycircle.topic_service.entities.Topic;
 import com.sesc.unistudycircle.topic_service.services.TopicServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("search")
 @RequiredArgsConstructor
+@Log
 public class TopicSearchController {
 
     private final TopicServiceImpl topicService;
@@ -28,6 +30,7 @@ public class TopicSearchController {
 
     @GetMapping("/studentName/{studentName}")
     public ResponseEntity<List<Topic>> searchAllTopicByStudentName(@PathVariable String studentName) {
+        log.info("studentName: " + studentName);
         List<Topic> topics = topicService.searchAllTopicByStudentName(studentName);
         return new ResponseEntity<>(topics, HttpStatus.OK);
     }

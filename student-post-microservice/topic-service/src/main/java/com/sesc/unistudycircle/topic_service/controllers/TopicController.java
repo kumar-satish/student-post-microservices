@@ -16,6 +16,11 @@ import java.util.List;
 public class TopicController {
     private final TopicServiceImpl topicService;
 
+    @GetMapping("/all")
+    public ResponseEntity<List<Topic>> listAllTopics() {
+        return ResponseEntity.ok(topicService.findAll());
+    }
+
     @PostMapping("create")
     public ResponseEntity<Topic> postTopic(@RequestBody Topic topic) {
         Topic createdTopic = topicService.postTopic(topic);

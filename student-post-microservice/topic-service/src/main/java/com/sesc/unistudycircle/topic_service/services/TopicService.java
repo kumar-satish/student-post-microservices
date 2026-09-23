@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface TopicService {
 
+    List<Topic> findAll();
+
     Topic postTopic(Topic topic);
 
     Topic viewTopic(Long topicId);

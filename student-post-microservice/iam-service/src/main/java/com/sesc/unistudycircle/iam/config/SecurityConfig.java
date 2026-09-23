@@ -57,6 +57,7 @@ public class SecurityConfig {
 
                         // Public registration endpoint
                         .requestMatchers(
+                                "/",
                                 "/api/auth/register"
                         ).permitAll()
 

@@ -21,6 +21,12 @@ public class TopicServiceImpl implements TopicService {
 
     private final TopicRepository repository;
     private final HttpRemoteServiceImpl httpRemoteService;
+
+    @Override
+    public List<Topic> findAll() {
+        return repository.findAll();
+    }
+
     @Override
     public Topic postTopic(Topic topic) {
         validateStudent(topic.getStudentId());
@@ -83,4 +89,3 @@ public class TopicServiceImpl implements TopicService {
         return repository.findAllByTopicDate(topicDate);
     }
 }
-

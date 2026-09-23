@@ -6,6 +6,8 @@ import com.sesc.unistudycircle.student_service.repositories.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
@@ -39,5 +41,10 @@ public class StudentServiceImpl implements StudentService {
         //Add additional validation logic if required
         updatedStudent.setStudentId(studentId);
         return repository.save(updatedStudent);
+    }
+
+    @Override
+    public List<Student> findAll() {
+        return repository.findAll();
     }
 }
