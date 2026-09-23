@@ -39,7 +39,7 @@ spring:
         - id: iam-service-route
           uri: lb://iam-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth/**,/api/admin/**
 
 
 eureka:

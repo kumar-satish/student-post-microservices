@@ -36,6 +36,7 @@ public class SecurityConfig {
 
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/actuator/health").permitAll()
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .pathMatchers("/api/auth/**").permitAll()
 
@@ -58,19 +59,23 @@ public class SecurityConfig {
 
     private Mono<AbstractAuthenticationToken> jwtAuthentication(Jwt jwt) {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        jwt.getClaimAsStringList("roles").forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+        var roles = jwt.getClaimAsStringList("roles");
+        if (roles != null) {
+            roles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+        }
         return Mono.just(new JwtAuthenticationToken(jwt, authorities, jwt.getSubject()));
     }
 
     @Bean
     UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

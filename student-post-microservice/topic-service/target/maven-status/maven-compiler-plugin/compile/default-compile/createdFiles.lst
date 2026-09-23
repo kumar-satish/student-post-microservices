@@ -1,0 +1,7 @@
+com/sesc/unistudycircle/topic_service/config/SecurityConfig.class
+com/sesc/unistudycircle/topic_service/entities/Topic.class
+com/sesc/unistudycircle/topic_service/repositories/TopicRepository.class
+com/sesc/unistudycircle/topic_service/services/TopicService.class
+com/sesc/unistudycircle/topic_service/entities/TopicVisibility.class
+com/sesc/unistudycircle/topic_service/controllers/TopicController.class
+com/sesc/unistudycircle/topic_service/services/TopicServiceImpl.class
