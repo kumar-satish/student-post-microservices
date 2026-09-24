@@ -4,44 +4,70 @@ server:
 spring:
   application:
     name: api-gateway
+
   main:
-    web-application-type: reactive  # You are using WebFlux, so this is correct
+    web-application-type: reactive
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8085
+
   cloud:
     gateway:
       discovery:
         locator:
-          enabled: true  # Enable dynamic route discovery from Eureka
+          enabled: true
+
       loadbalancer:
         retry:
-          enabled: true  # Enables retry mechanism for failed requests
+          enabled: true
+
       routes:
+
         - id: student-service-route
-          uri: lb://student-service  # Using service discovery (Eureka)
+          uri: lb://student-service
           predicates:
-            - Path=/student/**  # This will match all requests to /student/** (POST, GET, PUT, DELETE)
+            - Path=/student/**
+
         - id: topic-service-route
-          uri: lb://topic-service  # Using service discovery (Eureka)
+          uri: lb://topic-service
           predicates:
-            - Path=/topic/**  # This will match all requests to /topic/** (POST, GET, PUT, DELETE)
+            - Path=/topic/**
+
+        - id: iam-service-route
+          uri: lb://iam-service
+          predicates:
+            - Path=/api/auth/**,/api/admin/**
+
 
 eureka:
   client:
     healthcheck:
       enabled: true
+
     fetch-registry: true
+
     register-with-eureka: true
+
     service-url:
-      default-zone: http://localhost:8761/eureka  # Eureka server address
+      default-zone: http://localhost:8761/eureka
+
   instance:
     prefer-ip-address: true
+
     lease-renewal-interval-in-seconds: 5
+
     lease-expiration-duration-in-seconds: 10
+
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"  # Exposing all management endpoints
+        include: "*"
+
   endpoint:
     info:
       enabled: true

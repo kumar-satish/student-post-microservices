@@ -37,3 +37,59 @@ This guide will help you set up and run the Student-Post Microservices step by s
 
 Now, your microservices should be running successfully! 
 
+                         ┌──────────────┐
+                         │   Browser    │
+                         └──────┬───────┘
+                                │
+                         HTTPS + JWT
+                                │
+                                ▼
+                    ┌──────────────────────┐
+                    │     API GATEWAY      │
+                    │                      │
+                    │ Authentication       │
+                    │ Route authorization  │
+                    │ Rate limiting*        │
+                    └──────┬───────┬───────┘
+                           │       │
+                 ┌─────────┘       └─────────┐
+                 ▼                           ▼
+        ┌─────────────────┐         ┌─────────────────┐
+        │ Student Service │         │  Topic Service  │
+        │                 │         │                 │
+        │ JWT validation  │         │ JWT validation  │
+        │ RBAC            │         │ RBAC            │
+        │ Business authz  │         │ Business authz  │
+        └────────┬────────┘         └────────┬────────┘
+                 │                           │
+                 └────────────┬──────────────┘
+                              │
+                              │
+                    ┌─────────▼──────────┐
+                    │    IAM SERVICE     │
+                    │                    │
+                    │ Authentication     │
+                    │ Authorization      │
+                    │ User management    │
+                    │ Roles              │
+                    │ Permissions        │
+                    │ OAuth2/OIDC        │
+                    │ JWT issuing        │
+                    │ JWKS               │
+                    └─────────┬──────────┘
+                              │
+                              ▼
+                         ┌──────────┐
+                         │ IAM DB   │
+                         └──────────┘
+
+
+       ┌─────────────────────────────────────────────┐
+       │              INTERNAL INFRASTRUCTURE        │
+       │                                             │
+       │  ┌──────────────┐       ┌───────────────┐  │
+       │  │ Config       │       │ Discovery     │  │
+       │  │ Server :9999 │       │ Server        │  │
+       │  └──────────────┘       └───────────────┘  │
+       │                                             │
+       └─────────────────────────────────────────────┘

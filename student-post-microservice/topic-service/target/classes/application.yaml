@@ -2,6 +2,12 @@ spring:
   application:
     name: topic-service
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8085
+
   config:
-    import: configserver:http://localhost:8888
+    import: configserver:http://localhost:9999
     fail-fast: true

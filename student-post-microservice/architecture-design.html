@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UniStudyCircle Architecture Design</title>
+  <style>
+    :root{--ink:#172033;--muted:#59657b;--line:#dbe2ec;--surface:#fff;--bg:#f4f6fa;--accent:#2257c7;--green:#287a56;--orange:#a75f11}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,ui-sans-serif,system-ui,sans-serif}.page{max-width:1080px;margin:auto;padding:48px 28px 72px}header{padding:32px;background:var(--ink);color:#fff;border-radius:18px}h1{font-size:34px;margin:0 0 6px}h2{font-size:21px;margin:34px 0 12px}h3{font-size:16px;margin:0 0 6px}.subtle{color:#cbd5e4;margin:0}.meta{margin-top:18px;font-size:13px;color:#d5ddea}.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;margin:14px 0}.diagram{overflow:auto}.flow{min-width:920px;position:relative;display:grid;grid-template-columns:1.1fr .7fr 1.1fr .7fr 1.1fr;gap:12px;align-items:center;padding:14px 0}.node{min-height:112px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}.node strong{display:block}.node span{display:block;color:var(--muted);font-size:13px;margin-top:5px}.arrow{text-align:center;color:var(--accent);font-weight:700;font-size:24px}.security{border-color:#aac1f2;background:#f4f7ff}.data{border-color:#b8dacb;background:#f5fbf7}.note{border-color:#efd7b6;background:#fffaf2}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid .card{margin:0}.tag{display:inline-block;padding:2px 8px;border-radius:99px;background:#eaf0ff;color:#234c9d;font-size:12px;font-weight:700}table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{font-size:13px;color:var(--muted)}code{padding:2px 5px;background:#eff2f6;border-radius:4px;font-size:.9em}ul{padding-left:20px;margin:8px 0}li+li{margin-top:5px}.sequence{display:grid;grid-template-columns:150px 1fr;gap:0;margin-top:12px}.sequence div{padding:10px;border-bottom:1px solid var(--line)}.sequence div:nth-child(odd){font-weight:700;color:var(--accent)}.warning{border-left:4px solid var(--orange);padding:12px 14px;background:#fffaf2;color:#664313}@media(max-width:720px){.page{padding:20px 14px}.grid{grid-template-columns:1fr}.sequence{grid-template-columns:110px 1fr}h1{font-size:27px}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <h1>UniStudyCircle Architecture Design</h1>
+    <p class="subtle">Development architecture for topics, IAM authentication, and role-based authorization.</p>
+    <p class="meta">Scope: current local implementation · Ports: UI 3000, Gateway 8080, IAM 8085, Topic Service 8081, Eureka 8761, Config Server 9999</p>
+  </header>
+
+  <h2>1. System overview</h2>
+  <section class="card diagram" aria-label="Service architecture diagram">
+    <div class="flow">
+      <div class="node"><strong>React UI</strong><span>Topic pages, profile and admin user management.</span><span class="tag">localhost:3000</span></div>
+      <div class="arrow">→</div>
+      <div class="node security"><strong>API Gateway</strong><span>Routes requests, validates JWTs, applies roles and CORS.</span><span class="tag">localhost:8080</span></div>
+      <div class="arrow">→</div>
+      <div class="node data"><strong>Topic Service</strong><span>Stores and authorizes topic reads, edits and deletion.</span><span class="tag">/topic/**</span></div>
+    </div>
+    <div class="flow">
+      <div class="node"><strong>Browser sign-in</strong><span>OIDC Authorization Code flow with PKCE.</span></div>
+      <div class="arrow">→</div>
+      <div class="node security"><strong>IAM Service</strong><span>Login, token issuance, user administration and JWK publication.</span><span class="tag">localhost:8085</span></div>
+      <div class="arrow">←</div>
+      <div class="node"><strong>Gateway and Topic Service</strong><span>Use IAM issuer metadata and JWKs to validate the signed access token.</span></div>
+    </div>
+    <div class="flow">
+      <div class="node note"><strong>Local UI proxy</strong><span>Vite proxies <code>/topic</code> and <code>/api</code> to the gateway, avoiding browser CORS during development.</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><strong>Eureka</strong><span>Service discovery for gateway routes.</span><span class="tag">localhost:8761</span></div>
+      <div class="arrow">←</div>
+      <div class="node"><strong>Config Server</strong><span>Topic Service imports configuration at startup.</span><span class="tag">localhost:9999</span></div>
+    </div>
+  </section>
+
+  <h2>2. Authentication and request flow</h2>
+  <section class="card">
+    <div class="sequence">
+      <div>1. Sign in</div><div>The UI redirects the browser to IAM. IAM authenticates the user and returns to <code>/auth/callback</code> using Authorization Code + PKCE.</div>
+      <div>2. Token</div><div>IAM issues a signed access token containing <code>sub</code>, <code>username</code> and <code>roles</code> claims.</div>
+      <div>3. Gateway</div><div>The UI sends <code>Authorization: Bearer &lt;access token&gt;</code>. The gateway validates issuer and signature, then maps each role to Spring authority <code>ROLE_&lt;role&gt;</code>.</div>
+      <div>4. Service</div><div>The gateway routes the original bearer token to the Topic or IAM service. Each service also validates it and makes its own authorization decision.</div>
+    </div>
+  </section>
+
+  <h2>3. Authorization model</h2>
+  <section class="card">
+    <table>
+      <thead><tr><th>Actor</th><th>Topics</th><th>IAM users</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Unauthenticated</strong></td><td>Read public topic listing only.</td><td>No access.</td></tr>
+        <tr><td><strong>Student</strong></td><td>Create topics; read own private topics; edit or delete only topics where <code>ownerUsername</code> matches their JWT identity; choose PUBLIC or PRIVATE.</td><td>No access.</td></tr>
+        <tr><td><strong>Admin</strong></td><td>Read all topics and edit/delete any topic through <code>/topic/admin/**</code>.</td><td>List, create, activate, deactivate and delete users through <code>/api/admin/users</code>.</td></tr>
+      </tbody>
+    </table>
+    <p class="warning"><strong>Important:</strong> UI buttons are convenience only. Ownership and role checks are enforced in the Topic Service; the gateway adds a second route-level role check.</p>
+  </section>
+
+  <h2>4. Topic data and visibility</h2>
+  <section class="grid">
+    <article class="card"><h3>Ownership</h3><p>On create, the Topic Service derives <code>ownerUsername</code> from the validated JWT rather than trusting a username sent by the UI.</p></article>
+    <article class="card"><h3>Visibility</h3><p><code>PUBLIC</code> topics appear in the public list. <code>PRIVATE</code> topics can be viewed only by their owner or an admin.</p></article>
+    <article class="card"><h3>Listing experience</h3><p>List pages show a short preview. The full content is loaded only after the user opens that topic’s dedicated page.</p></article>
+    <article class="card"><h3>Write operations</h3><p>Updates change title, date, content and visibility only. Owner identity is not editable through the API.</p></article>
+  </section>
+
+  <h2>5. Routes used by the UI</h2>
+  <section class="card">
+    <table>
+      <thead><tr><th>Route</th><th>Method</th><th>Access</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>/topic/all</code></td><td>GET</td><td>Public</td><td>Public topics.</td></tr>
+        <tr><td><code>/topic/mine</code></td><td>GET</td><td>Authenticated</td><td>Topics owned by current user.</td></tr>
+        <tr><td><code>/topic/create</code></td><td>POST</td><td>Authenticated</td><td>Create a topic under the current JWT username.</td></tr>
+        <tr><td><code>/topic/{id}</code></td><td>GET, PUT, DELETE</td><td>Owner or admin where applicable</td><td>Read details, update or delete.</td></tr>
+        <tr><td><code>/topic/admin/all</code></td><td>GET</td><td>Admin</td><td>All topics.</td></tr>
+        <tr><td><code>/api/admin/users</code></td><td>GET, POST</td><td>Admin</td><td>List and create IAM users.</td></tr>
+        <tr><td><code>/api/admin/users/{id}/activate</code></td><td>PATCH</td><td>Admin</td><td>Activate; the equivalent deactivate route and DELETE are also available.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <h2>6. Operational notes and known development constraints</h2>
+  <section class="card">
+    <ul>
+      <li>Start Eureka and Config Server before Topic Service; start IAM before services that validate IAM tokens; then start the gateway and UI.</li>
+      <li>After IAM restarts, sign in again. The current IAM implementation generates its RSA/JWK signing key at startup, invalidating previously issued tokens and logout hints.</li>
+      <li>The UI proxy is for local Vite development. A deployed UI should set <code>VITE_API_GATEWAY_URL</code> and configure the gateway’s allowed origins for its real UI URL.</li>
+      <li>IAM uses MySQL database <code>iam_db</code> and seeds an <code>admin</code> account if absent. Change default credentials before exposing the application outside local development.</li>
+      <li>This is intentionally a learning-project design; add persistent signing keys, token revocation strategy, audit logging, validation, rate limits and production secret management before production use.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

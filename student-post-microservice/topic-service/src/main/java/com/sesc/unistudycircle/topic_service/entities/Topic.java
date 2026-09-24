@@ -24,4 +24,11 @@ public class Topic {
     private Long studentId;
 
     private String studentName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private TopicVisibility visibility = TopicVisibility.PRIVATE;
+
+    @Column(length = 50)
+    private String ownerUsername;
 }

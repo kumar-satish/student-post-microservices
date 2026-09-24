@@ -1,44 +1,10 @@
 package com.sesc.unistudycircle.topic_service.controllers;
-
-import com.sesc.unistudycircle.topic_service.entities.Topic;
-import com.sesc.unistudycircle.topic_service.services.TopicServiceImpl;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
-
-@RestController
-@RequestMapping("")
-@RequiredArgsConstructor
-public class TopicController {
-    private final TopicServiceImpl topicService;
-
-    @PostMapping("create")
-    public ResponseEntity<Topic> postTopic(@RequestBody Topic topic) {
-        Topic createdTopic = topicService.postTopic(topic);
-        return new ResponseEntity<>(createdTopic, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/{topicId}")
-    public ResponseEntity<Topic> viewTopic(@PathVariable Long topicId) {
-        Topic topic = topicService.viewTopic(topicId);
-        return new ResponseEntity<>(topic, HttpStatus.OK);
-    }
-
-    @PutMapping("/{topicId}")
-    public ResponseEntity<Topic> updateTopic(
-            @PathVariable Long topicId,
-            @RequestBody Topic updatedTopic) {
-        Topic topic = topicService.updateTopic(topicId, updatedTopic);
-        return new ResponseEntity<>(topic, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/{topicId}")
-    public ResponseEntity<Void> deleteTopic(@PathVariable Long topicId) {
-        topicService.deleteTopic(topicId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-}
+import com.sesc.unistudycircle.topic_service.entities.Topic; import com.sesc.unistudycircle.topic_service.services.TopicService; import lombok.RequiredArgsConstructor; import org.springframework.http.*; import org.springframework.security.core.Authentication; import org.springframework.web.bind.annotation.*; import java.util.List;
+@RestController @RequiredArgsConstructor public class TopicController { private final TopicService topics;
+ @GetMapping({"/all","/public"}) public List<Topic> publicTopics(){return topics.findPublic();}
+ @GetMapping("/mine") public List<Topic> mine(Authentication a){return topics.findMine(a.getName());}
+ @GetMapping("/{id}") public Topic view(@PathVariable Long id,Authentication a){return topics.view(id,a);}
+ @PostMapping("/create") public ResponseEntity<Topic> create(@RequestBody Topic t,Authentication a){return ResponseEntity.status(HttpStatus.CREATED).body(topics.create(t,a.getName()));}
+ @PutMapping("/{id}") public Topic update(@PathVariable Long id,@RequestBody Topic t,Authentication a){return topics.update(id,t,a);}
+ @DeleteMapping("/{id}") public ResponseEntity<Void> delete(@PathVariable Long id,Authentication a){topics.delete(id,a);return ResponseEntity.noContent().build();}
+ @GetMapping("/admin/all") public List<Topic> admin(){return topics.findAll();}}
